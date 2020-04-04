@@ -1,4 +1,4 @@
-package com.pql.design.proxy;
+package com.pql.design.proxy.test;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

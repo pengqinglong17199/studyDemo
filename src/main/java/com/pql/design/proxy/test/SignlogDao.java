@@ -1,4 +1,4 @@
-package com.pql.design.proxy;
+package com.pql.design.proxy.test;
 
 public class SignlogDao {
     public int insert(Signlog signlog){
