@@ -26,14 +26,18 @@ public class Main {
             Date date = sdf.parse("2020-04-02");
             signlog.setCreateTime(date.getTime());
 
-            ISignlogService signlogService = new SignlogServiceSaticProxy();
+             /*SISignlogService signlogService = new SignlogServiceSaticProxy();
             int id = signlogService.createOrder(signlog);
             System.out.println("考勤记录id:" + id +"\n");
 
             ISignlogService signlogService2 =
                     (ISignlogService)new JDKSignlogServiceDynamicProxy().getInstance(new SignlogService());
             signlogService2.createOrder(signlog);
-            System.out.println("考勤记录id:" + id);
+            System.out.println("考勤记录id:" + id);*/
+
+            ISignlogService signlogService3 = (ISignlogService) new CglibSignlogDynamicProxy().getInstance(SignlogService.class);
+            System.out.println("考勤记录id:" + signlogService3.createOrder(signlog));
+
         }catch (Exception e){
             e.printStackTrace();
         }
