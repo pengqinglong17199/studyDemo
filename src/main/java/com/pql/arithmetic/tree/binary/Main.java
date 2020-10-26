@@ -20,6 +20,8 @@ public class Main {
         tree.insert(new Worker(13,"董伟", 40, "男"));
         tree.insert(new Worker(14,"方健辉", 44, "男"));
         tree.insert(new Worker(15,"罗静茹", 58, "女"));
+
+        tree.delete(new Worker(15,"曾德宇", 30, "男"));
         System.out.println(true);
     }
 }

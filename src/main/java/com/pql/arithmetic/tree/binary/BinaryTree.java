@@ -41,7 +41,7 @@ public class BinaryTree<T extends Sort> {
             return true;
         }
 
-        return recursionInsert(root, t);
+        return forInsert(root, t);
     }
 
     /**
@@ -87,11 +87,12 @@ public class BinaryTree<T extends Sort> {
      */
     private boolean forInsert(Node node, T t){
 
+        Node<T> parentNode = node;
         Node<T> tempNode = node;
         int tempDirection = 0;
 
         while (tempNode != null){
-
+            parentNode = tempNode;
             // 值小于根节点 为左节点
             if (t.hash() < tempNode.hash()) {
                 tempNode = tempNode.left;
@@ -103,19 +104,116 @@ public class BinaryTree<T extends Sort> {
         };
 
         if (tempDirection == left) {
-            tempNode.left = new Node(t);
+            parentNode.left = new Node(t);
         } else {
-            tempNode.right = new Node(t);
+            parentNode.right = new Node(t);
         }
         return true;
     }
 
-
+    /**
+     * 删除节点
+     * @param t
+     * @return boolean
+     * @author 彭清龙
+     * @date 2020/10/19 15:56
+     */
     public boolean delete(T t){
+
+        // 根节点不可为空
+        if (root == null) {
+            return true;
+        }
+
+        // 删除
+        return delete(root, t);
+    }
+
+    /**
+     * 删除节点 节点下的节点指定给父节点
+     * 1. 如果左边有节点 将左节点提升为父节点
+     * 2. 如果左边无节点,将右节点提升为父节点
+     * @param t
+     * @return boolean
+     * @author 彭清龙
+     * @date 2020/10/19 15:56
+     */
+    private boolean delete(Node<T> node, T t) {
+
+        // 如果root匹配 直接删除root
+        if (root.hash() == t.hash()) {
+            Node<T> childNode = findChildNode(root);
+            root = childNode;
+            return true;
+        }
+
+        // 寻找该数据的父节点
+        Node<T> parentNode = findParentNode(t);
+        if(parentNode == null){
+            return false;
+        }
+
+        // 正常删除节点
+        if (parentNode.hash() > t.hash()) {
+            Node<T> tempNode = findChildNode(parentNode.left);
+            parentNode.left = tempNode;
+        }else{
+            Node<T> tempNode = findChildNode(parentNode.right);
+            parentNode.right = tempNode;
+        }
+
         return true;
     }
 
-    public T find(int val){
+    /**
+     *
+     * 查找匹配对象的父节点 返回null代表root根节点匹配
+     * @param t
+     * @return Node
+     * @author 彭清龙
+     * @date 2020/10/26 22:00:24
+     */
+    private Node<T> findParentNode(T t) {
+
+        Node<T> node = root;
+        // root由外部校验 此处不考虑root匹配情况
+
+        while (node != null){
+
+            // 左节点不为空或者右节点不为空 并且能匹配上
+            if((node.left != null && node.left.hash() == t.hash()) || (node.right != null && node.right.hash() == t.hash())){
+                break;
+            }
+
+            // 当前节点的子节点都无法匹配上 寻找下一级子节点
+            if (node.hash() > t.hash()) {
+                node = node.left;
+            }else {
+                node = node.right;
+            }
+        }
+
+        return node;
+    }
+
+    /**
+     *
+     * 获取子节点 优先获取左节点 左节点不存在则获取右节点 都不存在返回空
+     * @param node
+     * @return Node
+     * @author 彭清龙
+     * @date 2020/10/26 22:00:24
+     */
+    private Node<T> findChildNode(Node<T> node) {
+        Node<T> tempNode;
+        tempNode = node.left;
+        if (node == null) {
+            tempNode = node.right;
+        }
+        return tempNode;
+    }
+
+    public T find(T val){
         return null;
     }
 
