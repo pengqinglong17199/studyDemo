@@ -45,7 +45,7 @@ public class BinaryTree<T extends Sort> {
     }
 
     /**
-     * 递归业务插入节点 存在问题 如果树的深度过深 会导致栈溢出
+     * 递归业务插入节点 逻辑清晰 存在问题 如果树的深度过深 会导致栈溢出
      * @param node, t
      * @return boolean
      * @author 彭清龙
@@ -76,6 +76,38 @@ public class BinaryTree<T extends Sort> {
         }
 
         return recursionInsert(tempNode, t);
+    }
+
+    /**
+     * 循环业务插入节点
+     * @param node, t
+     * @return boolean
+     * @author 彭清龙
+     * @date 2020/10/19 16:54
+     */
+    private boolean forInsert(Node node, T t){
+
+        Node<T> tempNode = node;
+        int tempDirection = 0;
+
+        while (tempNode != null){
+
+            // 值小于根节点 为左节点
+            if (t.hash() < tempNode.hash()) {
+                tempNode = tempNode.left;
+                tempDirection = left;
+            } else { // 否则为右节点
+                tempNode = tempNode.right;
+                tempDirection = right;
+            }
+        };
+
+        if (tempDirection == left) {
+            tempNode.left = new Node(t);
+        } else {
+            tempNode.right = new Node(t);
+        }
+        return true;
     }
 
 
