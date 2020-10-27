@@ -178,40 +178,81 @@ public class BinaryTree<T extends Sort> {
      * 1. 如果左边有节点 将左节点提升为当前节点
      * 2. 如果左节点还存在子右节点，寻找到最底层得最右节点
      * 3. 如果左边无节点,将右节点提升为父节点
-     * @param node
+     * @param delNode
      * @return Node
      * @author 彭清龙
      * @date 2020/10/26 22:00:24
      */
-    private boolean delNodeReplace(Node<T> node) {
-        Node<T> tempNode;
-        tempNode = node.left;
+    private boolean delNodeReplace(Node<T> delNode) {
 
-        // 1号条件
-        if (tempNode != null) {
+        // 获取替换节点
+        Node<T> replaceNode = findReplace(delNode);
 
-            // 2号条件
-            while (tempNode.right != null){
-                tempNode = tempNode.right;
+        //如果替换节点为空 说明删除节点是一个叶子节点 直接删除
+        if(replaceNode == null){
+            if(root.hash() == delNode.hash()){
+                root = null;
+            }else if(delNode.parent.left != null && delNode.parent.left.hash() == delNode.hash()){
+                delNode.parent.left = null;
+            }else{
+                delNode.parent.right = null;
             }
-        }else{
-            // 符合3号条件
-            tempNode = node.right;
+            return true;
         }
-
-        // 子节点修改父节点为爷节点
-        tempNode.parent = node.parent;
 
         // root节点特殊判断
-        if(root.hash() == node.hash()){
-            root = tempNode;
-        }else if (node.parent.left.hash() == node.hash()) {
-            // 子节点覆盖父节点
-            node.parent.left = tempNode;
+        if(root.hash() == delNode.hash()){
+            Node<T> temp = root;
+            root = replaceNode;
+            // 看看替换节点的左/右 将其提升为root并将自己的右/左节点进行交付
+            if (temp.hash() > replaceNode.hash()) {
+                root.right = temp.right;
+            }else{
+                root.left = temp.left;
+            }
+            return true;
+        }
+
+        // 普通判断
+        if (delNode.parent.left.hash() == delNode.hash()) {
+            // 替换上升节点替换掉删除节点的存在 使删除节点无引用 等待垃圾回收
+            delNode.parent.left = replaceNode;
+            replaceNode.parent = delNode.parent;
+
         }else{
-            node.parent.right = tempNode;
+            // 删除节点是父节点的右节点时 将替换的左节点变为替换父节点的右节点 如果左节点为空 则使用右节点
+            Node<T> childNode = replaceNode.left;
+            if(childNode == null){
+                childNode = replaceNode.right;
+            }
+            Node<T> replaceNodeParent = replaceNode.parent;
+            replaceNodeParent.right = childNode;
+            if(childNode != null){
+                childNode.parent = replaceNodeParent;
+            }
+
+            // 替换上升节点替换掉删除节点的存在 使删除节点无引用 等待垃圾回收
+            delNode.parent.right = replaceNode;
+            replaceNode.parent = delNode.parent;
+
         }
         return true;
+    }
+
+    private Node<T> findReplace(Node<T> delNode) {
+        Node<T> replaceNode = delNode.left;
+        // 1号条件
+        if (replaceNode != null) {
+
+            // 2号条件
+            while (replaceNode.right != null){
+                replaceNode = replaceNode.right;
+            }
+        }else{
+            // 符合3号条件 在右节点进行解决
+            replaceNode = delNode.right;
+        }
+        return replaceNode;
     }
 
     public T find(T val){
