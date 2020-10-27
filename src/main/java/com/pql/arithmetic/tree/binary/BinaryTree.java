@@ -37,7 +37,7 @@ public class BinaryTree<T extends Sort> {
 
         // 赋值根节点
         if(root == null){
-            root = new Node(t);
+            root = new Node(t, null);
             return true;
         }
 
@@ -68,9 +68,9 @@ public class BinaryTree<T extends Sort> {
         // 校验子节点是否存在
         if(tempNode == null){
             if (tempDirection == left) {
-                node.left = new Node(t);
+                node.left = new Node(t, node);
             }else{
-                node.right = new Node(t);
+                node.right = new Node(t, node);
             }
             return true;
         }
@@ -104,9 +104,9 @@ public class BinaryTree<T extends Sort> {
         };
 
         if (tempDirection == left) {
-            parentNode.left = new Node(t);
+            parentNode.left = new Node(t, parentNode);
         } else {
-            parentNode.right = new Node(t);
+            parentNode.right = new Node(t, parentNode);
         }
         return true;
     }
@@ -131,8 +131,6 @@ public class BinaryTree<T extends Sort> {
 
     /**
      * 删除节点 节点下的节点指定给父节点
-     * 1. 如果左边有节点 将左节点提升为父节点
-     * 2. 如果左边无节点,将右节点提升为父节点
      * @param t
      * @return boolean
      * @author 彭清龙
@@ -140,56 +138,35 @@ public class BinaryTree<T extends Sort> {
      */
     private boolean delete(Node<T> node, T t) {
 
-        // 如果root匹配 直接删除root
-        if (root.hash() == t.hash()) {
-            Node<T> childNode = findChildNode(root);
-            root = childNode;
-            return true;
-        }
-
-        // 寻找该数据的父节点
-        Node<T> parentNode = findParentNode(t);
-        if(parentNode == null){
+        // 寻找需要删除的数据节点
+        Node<T> findNode = findNode(t);
+        if(findNode == null){
             return false;
         }
 
-        // 正常删除节点
-        if (parentNode.hash() > t.hash()) {
-            Node<T> tempNode = findChildNode(parentNode.left);
-            parentNode.left = tempNode;
-        }else{
-            Node<T> tempNode = findChildNode(parentNode.right);
-            parentNode.right = tempNode;
-        }
-
-        return true;
+        // 删除节点进行子节点替换
+        return delNodeReplace(findNode);
     }
 
     /**
      *
-     * 查找匹配对象的父节点 返回null代表root根节点匹配
+     * 查找匹配对象的节点 查不到则为null
      * @param t
      * @return Node
      * @author 彭清龙
      * @date 2020/10/26 22:00:24
      */
-    private Node<T> findParentNode(T t) {
+    private Node<T> findNode(T t) {
 
         Node<T> node = root;
-        // root由外部校验 此处不考虑root匹配情况
 
         while (node != null){
-
-            // 左节点不为空或者右节点不为空 并且能匹配上
-            if((node.left != null && node.left.hash() == t.hash()) || (node.right != null && node.right.hash() == t.hash())){
-                break;
-            }
-
-            // 当前节点的子节点都无法匹配上 寻找下一级子节点
             if (node.hash() > t.hash()) {
                 node = node.left;
-            }else {
+            } else if(node.hash() < t.hash()) {
                 node = node.right;
+            } else{
+                break;
             }
         }
 
@@ -197,20 +174,44 @@ public class BinaryTree<T extends Sort> {
     }
 
     /**
-     *
-     * 获取子节点 优先获取左节点 左节点不存在则获取右节点 都不存在返回空
+     * 获取需要删除的节点
+     * 1. 如果左边有节点 将左节点提升为当前节点
+     * 2. 如果左节点还存在子右节点，寻找到最底层得最右节点
+     * 3. 如果左边无节点,将右节点提升为父节点
      * @param node
      * @return Node
      * @author 彭清龙
      * @date 2020/10/26 22:00:24
      */
-    private Node<T> findChildNode(Node<T> node) {
+    private boolean delNodeReplace(Node<T> node) {
         Node<T> tempNode;
         tempNode = node.left;
-        if (node == null) {
+
+        // 1号条件
+        if (tempNode != null) {
+
+            // 2号条件
+            while (tempNode.right != null){
+                tempNode = tempNode.right;
+            }
+        }else{
+            // 符合3号条件
             tempNode = node.right;
         }
-        return tempNode;
+
+        // 子节点修改父节点为爷节点
+        tempNode.parent = node.parent;
+
+        // root节点特殊判断
+        if(root.hash() == node.hash()){
+            root = tempNode;
+        }else if (node.parent.left.hash() == node.hash()) {
+            // 子节点覆盖父节点
+            node.parent.left = tempNode;
+        }else{
+            node.parent.right = tempNode;
+        }
+        return true;
     }
 
     public T find(T val){
@@ -231,9 +232,11 @@ public class BinaryTree<T extends Sort> {
         private Node<T> left;
         private T val;
         private Node<T> right;
+        private Node<T> parent;
 
-        public Node(T t){
-            val = t;
+        public Node(T t, Node<T> parent){
+            this.val = t;
+            this.parent = parent;
         }
 
         public int hash(){
