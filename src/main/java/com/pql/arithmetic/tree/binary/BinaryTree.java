@@ -188,8 +188,9 @@ public class BinaryTree<T extends Sort> {
         // 获取替换节点
         Node<T> replaceNode = findReplace(delNode);
 
-        //如果替换节点为空 说明删除节点是一个叶子节点 直接删除
-        if(replaceNode == null){
+        // 删除节点为子节点
+        if(delNode.isChildNode()){
+
             if(root.hash() == delNode.hash()){
                 root = null;
             }else if(delNode.parent.left != null && delNode.parent.left.hash() == delNode.hash()){
@@ -197,46 +198,74 @@ public class BinaryTree<T extends Sort> {
             }else{
                 delNode.parent.right = null;
             }
-            return true;
-        }
 
-        // root节点特殊判断
-        if(root.hash() == delNode.hash()){
+        }else if (delNode.isRoot()) {
+
             Node<T> temp = root;
             root = replaceNode;
+            root.parent = null;
             // 看看替换节点的左/右 将其提升为root并将自己的右/左节点进行交付
             if (temp.hash() > replaceNode.hash()) {
                 root.right = temp.right;
+                root.right.parent = root;
             }else{
                 root.left = temp.left;
+                root.left.parent = root;
             }
-            return true;
-        }
 
-        // 普通判断
-        if (delNode.parent.left.hash() == delNode.hash()) {
-            // 替换上升节点替换掉删除节点的存在 使删除节点无引用 等待垃圾回收
+        }else if(delNode.isLeft()){
+
+            // 节点上升处理
+            nodeRiseDispose(delNode, replaceNode);
+
+            // 左节点上升
             delNode.parent.left = replaceNode;
             replaceNode.parent = delNode.parent;
 
-        }else{
-            // 删除节点是父节点的右节点时 将替换的左节点变为替换父节点的右节点 如果左节点为空 则使用右节点
-            Node<T> childNode = replaceNode.left;
-            if(childNode == null){
-                childNode = replaceNode.right;
-            }
-            Node<T> replaceNodeParent = replaceNode.parent;
-            replaceNodeParent.right = childNode;
-            if(childNode != null){
-                childNode.parent = replaceNodeParent;
-            }
+        }else if(delNode.isRight()){
 
-            // 替换上升节点替换掉删除节点的存在 使删除节点无引用 等待垃圾回收
+            // 节点上升处理
+            nodeRiseDispose(delNode, replaceNode);
+
+            // 右节点上升
             delNode.parent.right = replaceNode;
             replaceNode.parent = delNode.parent;
 
         }
+
         return true;
+    }
+
+    /**
+     * 节点上升前的关联节点处理
+     * @param delNode, replaceNode
+     * @return void
+     * @author 彭清龙
+     * @date 2020/10/28 20:12
+     */
+    private void nodeRiseDispose(Node<T> delNode, Node<T> replaceNode) {
+        // 替换节点角色是左节点
+        if(replaceNode.isLeft()){
+
+            // 替换节点是左节点时代表他没有右节点 将删除节点的右节点链接过来
+            replaceNode.right = delNode.right;
+
+        }else if(replaceNode.isRight()){// 替换节点是右节点
+
+            // 叶子节点无需处理
+            if (!replaceNode.isChildNode()) {
+                Node<T> childNode = replaceNode.left;
+                if(childNode == null){
+                    childNode = replaceNode.right;
+                }
+                Node<T> replaceNodeParent = replaceNode.parent;
+                replaceNodeParent.right = childNode;
+                if(childNode != null){
+                    childNode.parent = replaceNodeParent;
+                }
+
+            }
+        }
     }
 
     private Node<T> findReplace(Node<T> delNode) {
@@ -262,6 +291,7 @@ public class BinaryTree<T extends Sort> {
     public void pint(T t){
 
     }
+
     /**
      * 节点内部类
      * @author 彭清龙
@@ -269,6 +299,14 @@ public class BinaryTree<T extends Sort> {
      */
     @Data
     private class Node<T extends Sort>{
+
+        /** 节点角色  根节点*/
+        public static final int ROLE_ROOT = 0;
+        /** 节点角色 左节点*/
+        public static final int ROLE_LEFT = 1;
+        /** 节点角色 右节点*/
+        public static final int ROLE_RIGHT = 2;
+
 
         private Node<T> left;
         private T val;
@@ -282,6 +320,65 @@ public class BinaryTree<T extends Sort> {
 
         public int hash(){
             return val.hash();
+        }
+
+        /**
+         * 判断节点是否是叶子节点
+         * @return boolean
+         * @author 彭清龙
+         * @date 2020/10/28 17:28
+         */
+        public boolean isChildNode(){
+            return left == null & right == null;
+        }
+
+        /**
+         * 是否是根节点
+         * @return boolean
+         * @author 彭清龙
+         * @date 2020/10/28 20:15
+         */
+        public boolean isRoot(){
+            return parent == null;
+        }
+
+        /**
+         * 是否是左节点
+         * @return boolean
+         * @author 彭清龙
+         * @date 2020/10/28 20:14
+         */
+        public boolean isLeft(){
+            return parent != null && this.equals(parent.left);
+        }
+
+        /**
+         * 是否右节点
+         * @return boolean
+         * @author 彭清龙
+         * @date 2020/10/28 20:14
+         */
+        public boolean isRight(){
+            return parent != null && this.equals(parent.right);
+        }
+
+        /**
+         * 获取节点角色
+         * @return int 0: 无父节点 1: 属于父节点的左节点 2: 属于父节点的右节点
+         * @author 彭清龙
+         * @date 2020/10/28 17:28
+         */
+        public int getRole(){
+            if(parent != null){
+                return this.equals(parent.left) ? ROLE_LEFT : ROLE_RIGHT;
+            }
+            return ROLE_ROOT;
+        }
+
+        @Override
+        public String toString(){
+
+            return val.hash()+"";
         }
     }
 }
