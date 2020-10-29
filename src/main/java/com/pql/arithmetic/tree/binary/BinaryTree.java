@@ -301,8 +301,20 @@ public class BinaryTree<T extends Sort> {
         return replaceNode;
     }
 
+    /**
+     * 在二叉树中查询数据
+     * @param val
+     * @return T
+     * @author 彭清龙
+     * @date 2020/10/29 14:59
+     */
     public T find(T val){
-        return null;
+        Node<T> node = findNode(val);
+        T t = null;
+        if(node != null){
+            t = node.val;
+        }
+        return t;
     }
 
     public void pint(T t){
