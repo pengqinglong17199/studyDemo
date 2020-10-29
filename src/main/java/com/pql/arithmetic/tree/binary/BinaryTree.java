@@ -249,22 +249,39 @@ public class BinaryTree<T extends Sort> {
 
             // 替换节点是左节点时代表他没有右节点 将删除节点的右节点链接过来
             replaceNode.right = delNode.right;
+            replaceNode.right.parent = replaceNode;
 
         }else if(replaceNode.isRight()){// 替换节点是右节点
 
-            // 叶子节点无需处理
-            if (!replaceNode.isChildNode()) {
-                Node<T> childNode = replaceNode.left;
+            Node<T> right = replaceNode.right;
+            Node<T> left = replaceNode.left;
+
+            // 叶子节点处理
+            if (replaceNode.isChildNode()) {
+                // 无子节点的叶子节点直接继承删除节点的左右节点
+                replaceNode.right = delNode.right;
+                replaceNode.right.parent = replaceNode;
+
+                replaceNode.left = delNode.left;
+                replaceNode.left.parent = replaceNode;
+            }
+
+            // 替换节点左右节点是否饱满 如果不饱满 需要处理节点向上继承即可
+            // 如果左右饱满 说明替换节点的选择满足了条件3 也就是删除节点左边无节点 无需处理子节点
+            if(right == null || left == null){
+                // 上升节点的子节点转为父节点连接
+                Node<T> childNode = left;
                 if(childNode == null){
-                    childNode = replaceNode.right;
+                    childNode = right;
                 }
                 Node<T> replaceNodeParent = replaceNode.parent;
                 replaceNodeParent.right = childNode;
                 if(childNode != null){
                     childNode.parent = replaceNodeParent;
                 }
-
             }
+
+
         }
     }
 
